@@ -10,6 +10,8 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "Perception/AIPerceptionStimuliSourceComponent.h"
+#include "Perception/AISenseConfig_Sight.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -50,6 +52,7 @@ ABehaviourTreeAICharacter::ABehaviourTreeAICharacter()
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
+	SetupStimulusSource();
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
 }
@@ -58,6 +61,18 @@ void ABehaviourTreeAICharacter::BeginPlay()
 {
 	// Call the base class  
 	Super::BeginPlay();
+
+	SetIsTagged(false);
+}
+
+void ABehaviourTreeAICharacter::SetupStimulusSource()
+{
+	StimulusSource = CreateDefaultSubobject<UAIPerceptionStimuliSourceComponent>(TEXT("Stimulus"));
+	if (StimulusSource)
+	{
+		StimulusSource->RegisterForSense(TSubclassOf<UAISense_Sight>());
+		StimulusSource->RegisterWithPerceptionSystem();
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -86,6 +101,9 @@ void ABehaviourTreeAICharacter::SetupPlayerInputComponent(UInputComponent* Playe
 
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ABehaviourTreeAICharacter::Look);
+
+		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Started, this, &ABehaviourTreeAICharacter::Attack);
+		EnhancedInputComponent->BindAction(QuitAction, ETriggerEvent::Started, this, &ABehaviourTreeAICharacter::Quit);
 	}
 	else
 	{
@@ -126,5 +144,27 @@ void ABehaviourTreeAICharacter::Look(const FInputActionValue& Value)
 		// add yaw and pitch input to controller
 		AddControllerYawInput(LookAxisVector.X);
 		AddControllerPitchInput(LookAxisVector.Y);
+	}
+}
+
+void ABehaviourTreeAICharacter::Attack(const FInputActionValue& Value)
+{
+	if (Value.Get<bool>())
+	{
+		if (auto* const AnimInstance = GetMesh()->GetAnimInstance())
+		{
+			AnimInstance->Montage_Play(Montage);
+		}
+	}
+}
+
+void ABehaviourTreeAICharacter::Quit(const FInputActionValue& Value)
+{
+	if (Value.Get<bool>())
+	{
+		if (GetWorld())
+		{
+			GetWorld()->GetFirstPlayerController()->ConsoleCommand("quit");
+		}
 	}
 }

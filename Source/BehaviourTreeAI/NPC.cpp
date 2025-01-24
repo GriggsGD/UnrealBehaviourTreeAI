@@ -2,6 +2,7 @@
 
 
 #include "NPC.h"
+//#include "BehaviourTree/BehaviorTree.h"
 
 // Sets default values
 ANPC::ANPC()
@@ -11,11 +12,17 @@ ANPC::ANPC()
 
 }
 
+UBehaviorTree* ANPC::GetBehaviorTree() const
+{
+	return BT;
+}
+
 // Called when the game starts or when spawned
 void ANPC::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	SetIsTagged(true);
 }
 
 // Called every frame
@@ -30,5 +37,23 @@ void ANPC::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
+}
+
+void ANPC::SetIsSearching(bool bIsSearching)
+{
+	IsSearching = bIsSearching;
+}
+
+void ANPC::TagAttack_Implementation()
+{
+	if (Montage)
+	{
+		PlayAnimMontage(Montage);
+	}
+}
+
+UAnimMontage* ANPC::GetMontage() const
+{
+	return Montage;
 }
 
