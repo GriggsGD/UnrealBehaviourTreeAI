@@ -11,22 +11,23 @@ ABTAICharacterBase::ABTAICharacterBase() :
 	RightFistColBox{CreateDefaultSubobject<UBoxComponent>(TEXT("RightFistColBox"))}
 {
 	PrimaryActorTick.bCanEverTick = true;
+	
+}
+void ABTAICharacterBase::BeginPlay()
+{
+	Super::BeginPlay();
 
 	if (RightFistColBox)
 	{
 		RightFistColBox->SetBoxExtent(defs::RightFistColBoxSize);
 		FAttachmentTransformRules const Rules{
-		EAttachmentRule::SnapToTarget,
-		EAttachmentRule::SnapToTarget,
-		EAttachmentRule::SnapToTarget,
-		false};
+			EAttachmentRule::SnapToTarget,
+			EAttachmentRule::SnapToTarget,
+			EAttachmentRule::SnapToTarget,
+			false};
 		RightFistColBox->AttachToComponent(GetMesh(), Rules, defs::RightFistSocketName);
 		RightFistColBox->SetRelativeLocation(defs::RightFistColBoxPos);
 	}
-}
-void ABTAICharacterBase::BeginPlay()
-{
-	Super::BeginPlay();
 
 	RightFistColBox->SetCollisionProfileName("Fist");
 	RightFistColBox->OnComponentBeginOverlap.AddDynamic(this, &ABTAICharacterBase::OnTagOverlapBegin);
